@@ -1,0 +1,40 @@
+<?php
+/**
+ * @file
+ * Functions to support theming in the STARTER theme.
+ */
+
+use Drupal\Core\Render\Markup;
+
+/**
+ * Implements template_preprocess_html().
+ * @param array $vars
+ */
+function STARTER_preprocess_html(&$vars) {
+
+  // Contains the injected and compiled Angular HTML.
+  $vars['angular'] = [];
+  // We have two different possible environments. DEV and PROD. If DEV exists,
+  // we want to use it. PROD is the only thing allowed to be commited to GIT.
+  $theme_path = drupal_get_path('theme', 'STARTER');
+  foreach( ['dev','prod'] as $env) {
+    $env_path = "$theme_path/dist/$env/index.html";
+    if(file_exists($env_path)) {
+      $vars['angular']['#markup'] = Markup::create(file_get_contents($env_path));
+      break;
+    }
+  }
+
+}
+
+/**
+ * Implements template_preprocess_page.
+ * @param array $vars
+ */
+// function STARTER_preprocess_page(&$vars) {}
+
+/**
+ * Implements template_preprocess_node.
+ * @param array $vars
+ */
+// function STARTER_preprocess_node(&$vars) {}

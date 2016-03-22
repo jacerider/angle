@@ -1,0 +1,8 @@
+name: Angle
+type: theme
+description: Drupal + Angular
+core: 8.x
+# libraries:
+#   - angle/global
+regions:
+  content: Content

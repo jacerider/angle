@@ -1,0 +1,6 @@
+name: Angle Starter
+type: theme
+description: Drupal + Angular
+core: 8.x
+regions:
+  content: Content
