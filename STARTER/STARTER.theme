@@ -13,14 +13,24 @@ use Drupal\Core\Render\Markup;
 function STARTER_preprocess_html(&$vars) {
 
   // Contains the injected and compiled Angular HTML.
-  $vars['angular'] = [];
-  // We have two different possible environments. DEV and PROD. If DEV exists,
-  // we want to use it. PROD is the only thing allowed to be commited to GIT.
-  $theme_path = drupal_get_path('theme', 'STARTER');
+  $vars['appCss'] = [];
+  $vars['appJsShims'] = [];
+  $vars['appConfig'] = [];
+  $vars['appJsLibs'] = [];
+  $vars['appJs'] = [];
+  $vars['appBootstrap'] = [];
+
+  $path = \Drupal::root() . '/app';
   foreach( ['dev','prod'] as $env) {
-    $env_path = "$theme_path/dist/$env/index.html";
+    $env_path = "$path/dist/$env/index.html";
     if(file_exists($env_path)) {
-      $vars['angular']['#markup'] = Markup::create(file_get_contents($env_path));
+      include_once $env_path;
+      $vars['appCss']['#markup'] = Markup::create($appCss);
+      $vars['appJsShims']['#markup'] = Markup::create($appJsShims);
+      $vars['appConfig']['#markup'] = Markup::create($appConfig);
+      $vars['appJsLibs']['#markup'] = Markup::create($appJsLibs);
+      $vars['appJs']['#markup'] = Markup::create($appJs);
+      $vars['appBootstrap']['#markup'] = Markup::create($appBootstrap);
       break;
     }
   }

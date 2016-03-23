@@ -33,8 +33,11 @@ function angle_drush_command() {
  * Create a Angle sub-theme.
  */
 function drush_angle_generate($name, $machine_name = NULL) {
+
+  //////////////////////////////////////////////////////////////////////////////
+  // SETUP
+
   $description = drush_get_option('description');
-  // $machine_name = drush_get_option('machine_name');
 
   if (empty($name)) {
     drush_set_error(dt("Please provide a name for the sub-theme.\nUSAGE:\tdrush angle [name] [machine_name !OPTIONAL] --description=[description !OPTIONAL]\n"));
@@ -53,34 +56,19 @@ function drush_angle_generate($name, $machine_name = NULL) {
   $subtheme_path = dirname($angle_path) . '/' . $machine_name;
   $relative_path = str_replace('angle', $machine_name, drupal_get_path('theme', 'angle'));
 
-  // Download Angle seed
-  $seed_source = 'https://github.com/jacerider/angle-seed/archive/master.zip';
-  $seed_dest = "$angle_path/seed.zip";
-  $seed_folder = "$angle_path/angle-seed-master";
-  if (!drush_download_file($seed_source, $seed_dest)) {
-    drupal_log(dt('Angle Seed could not be downloaded.'), LogLevel::ERROR);
+  if (file_exists($app_path)) {
+    drush_log(dt("A theme already exists that is using the /app directory."), 'error');
     return;
   }
-  drush_register_file_for_deletion($seed_dest);
-  if (!drush_file_is_tarball($seed_dest)) {
-    drupal_log(dt('Angle Seed was not a tarball.'), LogLevel::ERROR);
-    return;
-  }
-  drush_tarball_extract($seed_dest);
-  if (!file_exists($seed_folder)) {
-    drupal_log(dt('Angle Seed was not extracted properly.'), LogLevel::ERROR);
-    return;
-  }
-  drush_register_file_for_deletion($seed_folder);
-  $s = drush_copy_dir($seed_folder, $app_path);
-  if (empty($s)) {
-    drupal_log(dt('Angle Seed could not be coppied to destination.'), LogLevel::ERROR);
-  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // STARTER
 
   // Merge in starter files.
   $s = drush_copy_dir("$angle_path/STARTER/", $subtheme_path);
   if (empty($s)) {
-    drupal_log(dt('Theme could not be cloned.'), LogLevel::ERROR);
+    drupal_log(dt('Theme could not be cloned.'), 'error');
   }
 
   // Rename files and fill in the theme machine name
@@ -105,10 +93,48 @@ function drush_angle_generate($name, $machine_name = NULL) {
   // Rename functions in .theme
   drush_op('angle_file_str_replace', "$subtheme_path/$machine_name.theme", 'STARTER', "$machine_name");
 
+
+  //////////////////////////////////////////////////////////////////////////////
+  // SEED
+
+  // Download Angle seed
+  $seed_source = 'https://github.com/jacerider/angle-seed/archive/master.zip';
+  $seed_dest = "$angle_path/seed.zip";
+  $seed_folder = "$angle_path/angle-seed-master";
+  if (!drush_download_file($seed_source, $seed_dest)) {
+    drupal_log(dt('Angle Seed could not be downloaded.'), 'error');
+    return;
+  }
+  drush_register_file_for_deletion($seed_dest);
+  if (!drush_file_is_tarball($seed_dest)) {
+    drupal_log(dt('Angle Seed was not a tarball.'), 'error');
+    return;
+  }
+  drush_tarball_extract($seed_dest);
+  if (!file_exists($seed_folder)) {
+    drupal_log(dt('Angle Seed was not extracted properly.'), 'error');
+    return;
+  }
+  drush_register_file_for_deletion($seed_folder);
+  $s = drush_copy_dir($seed_folder, $app_path);
+  if (empty($s)) {
+    drupal_log(dt('Angle Seed could not be coppied to destination.'), 'error');
+  }
+
   // Replace NAME and DESCRIPTION in package.json
   drush_op('angle_file_str_replace', "$app_path/package.json", 'angle-seed', "$machine_name");
   if (!empty($description)) {
     drush_op('angle_file_str_replace', "$app_path/package.json", 'Seed for Angle Drupal theme', "$description");
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // FINISH
+
+  // Merge in starter files.
+  $s = drush_copy_dir("$angle_path/APP/", $app_path, FILE_EXISTS_MERGE);
+  if (empty($s)) {
+    drupal_log(dt('Could not merge APP into app.'), 'error');
   }
 
   // Notify user of the newly created theme.
